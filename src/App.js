@@ -16,10 +16,12 @@ import { listNotes } from "./graphql/queries";
 import {
   createNote as createNoteMutation,
   deleteNote as deleteNoteMutation,
+  updateNote as updateNoteMutation,
 } from "./graphql/mutations";
 
 const App = ({ signOut }) => {
   const [notes, setNotes] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     fetchNotes();
@@ -42,7 +44,21 @@ const App = ({ signOut }) => {
     );
     setNotes(notesFromAPI);
   }
-  
+
+  async function updateNote(id, name, description, price) {
+    const updatedNote = {
+      id,
+      name,
+      description,
+      price: parseFloat(price),
+    };
+    await API.graphql({
+      query: updateNoteMutation,
+      variables: { input: updatedNote },
+    });
+    fetchNotes();
+    setEditingId(null);
+  }
 
   async function createNote(event) {
     event.preventDefault();
@@ -54,20 +70,18 @@ const App = ({ signOut }) => {
       price: parseFloat(form.get("price")),
       image: image.name,
     };
-    console.log("Form data:", data);
+
     if (!!data.image) {
-      await Storage.put(data.name, image);
-      console.log(`Image URL: ${await Storage.get(data.name)}`);
+      await Storage.put(data.image, image);
     }
     await API.graphql({
       query: createNoteMutation,
       variables: { input: data },
     });
-    console.log("Note created:", data);
+
     fetchNotes();
     event.target.reset();
   }
-  
 
   async function deleteNote({ id, name }) {
     const newNotes = notes.filter((note) => note.id !== id);
@@ -78,6 +92,10 @@ const App = ({ signOut }) => {
       variables: { input: { id } },
     });
   }
+
+  const calculateTotalPrice = () => {
+    return notes.reduce((total, note) => total + note.price, 0).toFixed(2);
+  };
 
   return (
     <View className="App">
@@ -100,7 +118,8 @@ const App = ({ signOut }) => {
             variation="quiet"
             required
           />
-          <TextField
+         
+         <TextField
             name="price"
             placeholder="Note Price"
             label="Note Price"
@@ -110,49 +129,70 @@ const App = ({ signOut }) => {
             step="0.01"
             required
           />
-           <input
+          <TextField
             name="image"
             type="file"
-            style={{ alignSelf: "end" }}
+            label="Note Image"
+            labelHidden
+            variation="quiet"
           />
-          <Button type="submit" variation="primary">
-            Create Food
-          </Button>
+          <Button type="submit">Add Note</Button>
         </Flex>
       </View>
-      <Heading level={2}>Current Food</Heading>
-      <View margin="3rem 0">
+      <Heading level={3}>Total Price: ${calculateTotalPrice()}</Heading>
+      <Flex direction="column" gap="1rem">
         {notes.map((note) => (
           <Flex
-            key={note.id || note.name}
+            key={note.id}
             direction="row"
-            justifyContent="center"
             alignItems="center"
+            gap="1rem"
+            justifyContent="space-between"
           >
-            <Text as="strong" fontWeight={700}>
-              {note.name}
-            </Text>
-            <Text as="span">{note.description}</Text>
-            <Text as="span">Price: ${note.price.toFixed(2)}</Text>
-            {console.log(`Image URL: ${note.image}`)}
-            {console.log(`Image URL: ${note.name}`)}
-            {note.image && (
-              <Image
-                src={note.image}
-                alt={`visual aid for ${note.name}`}
-                style={{ width: 400 }}
+            {editingId === note.id ? (
+              <TextField
+                defaultValue={note.name}
+                onBlur={(e) => updateNote(note.id, e.target.value, note.description, note.price)}
               />
+            ) : (
+              <Text>{note.name}</Text>
             )}
-            <Button variation="link" onClick={() => deleteNote(note)}>
-              Delete note
-            </Button>
+            {editingId === note.id ? (
+              <TextField
+                defaultValue={note.description}
+                onBlur={(e) => updateNote(note.id, note.name, e.target.value, note.price)}
+              />
+            ) : (
+              <Text>{note.description}</Text>
+            )}
+            {editingId === note.id ? (
+              <TextField
+                defaultValue={note.price}
+                type="number"
+                step="0.01"
+                onBlur={(e) => updateNote(note.id, note.name, note.description, e.target.value)}
+              />
+            ) : (
+              <Text>${note.price.toFixed(2)}</Text>
+            )}
+            <Image
+              src={note.image}
+              alt={note.name}
+              width="50"
+              height="50"
+              objectFit="contain"
+            />
+            {editingId === note.id ? (
+              <Button onClick={() => setEditingId(null)}>Cancel</Button>
+            ) : (
+              <Button onClick={() => setEditingId(note.id)}>Edit</Button>
+            )}
+            <Button onClick={() => deleteNote(note)}>Delete</Button>
           </Flex>
         ))}
-      </View>
-      <Button onClick={signOut}>Sign Out</Button>
+      </Flex>
     </View>
   );
 };
 
 export default withAuthenticator(App);
-
