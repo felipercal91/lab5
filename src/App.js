@@ -31,14 +31,18 @@ const App = ({ signOut }) => {
     await Promise.all(
       notesFromAPI.map(async (note) => {
         if (note.image) {
+          console.log(`aca 1`);
           const url = await Storage.get(note.name);
+          console.log(`Image URL 111 for ${note.name}: ${url}`);
           note.image = url;
+          console.log(`Image URL for ${note.image}: ${url}`);
         }
         return note;
       })
     );
     setNotes(notesFromAPI);
   }
+  
 
   async function createNote(event) {
     event.preventDefault();
@@ -50,14 +54,20 @@ const App = ({ signOut }) => {
       price: parseFloat(form.get("price")),
       image: image.name,
     };
-    if (!!data.image) await Storage.put(data.name, image);
+    console.log("Form data:", data);
+    if (!!data.image) {
+      await Storage.put(data.name, image);
+      console.log(`Image URL: ${await Storage.get(data.name)}`);
+    }
     await API.graphql({
       query: createNoteMutation,
       variables: { input: data },
     });
+    console.log("Note created:", data);
     fetchNotes();
     event.target.reset();
   }
+  
 
   async function deleteNote({ id, name }) {
     const newNotes = notes.filter((note) => note.id !== id);
@@ -100,7 +110,7 @@ const App = ({ signOut }) => {
             step="0.01"
             required
           />
-          <input
+           <input
             name="image"
             type="file"
             style={{ alignSelf: "end" }}
@@ -124,6 +134,8 @@ const App = ({ signOut }) => {
             </Text>
             <Text as="span">{note.description}</Text>
             <Text as="span">Price: ${note.price.toFixed(2)}</Text>
+            {console.log(`Image URL: ${note.image}`)}
+            {console.log(`Image URL: ${note.name}`)}
             {note.image && (
               <Image
                 src={note.image}
