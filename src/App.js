@@ -76,26 +76,28 @@ const App = ({ signOut }) => {
         <Flex direction="row" justifyContent="center">
           <TextField
             name="name"
-            placeholder="Food Name"
-            label="Food Name"
+            placeholder="Note Name"
+            label="Note Name"
             labelHidden
             variation="quiet"
             required
           />
           <TextField
             name="description"
-            placeholder="Food Description"
-            label="Food Description"
+            placeholder="Note Description"
+            label="Note Description"
             labelHidden
             variation="quiet"
             required
           />
           <TextField
             name="price"
-            placeholder="Food Price"
-            label="Food Price"
+            placeholder="Note Price"
+            label="Note Price"
             labelHidden
             variation="quiet"
+            type="number"
+            step="0.01"
             required
           />
           <input
@@ -104,11 +106,11 @@ const App = ({ signOut }) => {
             style={{ alignSelf: "end" }}
           />
           <Button type="submit" variation="primary">
-            Add Food
+            Create Food
           </Button>
         </Flex>
       </View>
-      <Heading level={2}>My Food</Heading>
+      <Heading level={2}>Current Food</Heading>
       <View margin="3rem 0">
         {notes.map((note) => (
           <Flex
@@ -121,23 +123,23 @@ const App = ({ signOut }) => {
               {note.name}
             </Text>
             <Text as="span">{note.description}</Text>
-            <Text as="span">{note.price}</Text>
+            <Text as="span">Price: ${note.price.toFixed(2)}</Text>
             {note.image && (
               <Image
-              src={note.image}
-              alt={`visual aid for ${note.name}`}
-              style={{ width: 400 }}
-            />
-          )}
-          <Button variation="link" onClick={() => deleteNote(note)}>
-            Delete note
-          </Button>
-        </Flex>
-      ))}
+                src={note.image}
+                alt={`visual aid for ${note.name}`}
+                style={{ width: 400 }}
+              />
+            )}
+            <Button variation="link" onClick={() => deleteNote(note)}>
+              Delete note
+            </Button>
+          </Flex>
+        ))}
+      </View>
+      <Button onClick={signOut}>Sign Out</Button>
     </View>
-    <Button onClick={signOut}>Sign Out</Button>
-  </View>
-);
+  );
 };
 
 export default withAuthenticator(App);
