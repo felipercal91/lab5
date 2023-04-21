@@ -14,6 +14,12 @@
     "categories": {
       "auth": {
         "lab5cedf0736": {}
+      },
+      "api": {
+        "lab5": {}
+      },
+      "storage": {
+        "s3e4d0d750": {}
       }
     }
   }
