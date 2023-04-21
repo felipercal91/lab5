@@ -5,7 +5,7 @@ input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONL
 type Note @model @auth(rules: [{ allow: public }]) {
   id: ID!
   name: String!
-  description: String
+  description: String!
+  price: Float!
   image: String
-  price: Float
 }
